@@ -11,7 +11,7 @@ app.use(cors());
 app.use(express.json());
 
 app.get("/", function (req, res) {
-  res.json({ message: "API Listening" });
+  res.json({ message: "API Listening!" });
 });
 
 app.post("/api/movies", function (req, res) {
