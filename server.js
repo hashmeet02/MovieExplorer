@@ -40,8 +40,7 @@ app.get("/api/movies", function (req, res) {
       promise = db.getAllMovies(
         req.query.page,
         req.query.perPage,
-        req.query.title
-    );
+        req.query.title);
     } else {
       promise = db.getAllMovies(req.query.page, req.query.perPage);
     }
