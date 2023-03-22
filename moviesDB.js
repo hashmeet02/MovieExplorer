@@ -5,17 +5,43 @@ let mongoDBConnectionString = process.env.MONGO_URL;
 
 const Schema = mongoose.Schema;
 
-let userSchema = new Schema({
-    userName: {
-        type: String,
-        unique: true
+const movieSchema = new Schema({
+  plot: String,
+  genres: [String],
+  runtime: Number,
+  cast: [String],
+  num_mflix_comments: Number,
+  poster: String,
+  title: String,
+  fullplot: String,
+  languages: [String],
+  released: Date,
+  directors: [String],
+  rated: String,
+  awards: {
+    wins: Number,
+    nominations: Number,
+    text: String,
+  },
+  lastupdated: Date,
+  year: Number,
+  imdb: {
+    rating: Number,
+    votes: Number,
+    id: Number,
+  },
+  countries: [String],
+  type: String,
+  tomatoes: {
+    viewer: {
+      rating: Number,
+      numReviews: Number,
+      meter: Number,
     },
-    password: String,
-    favourites: [String],
-    history: [String]
+    dvd: Date,
+    lastUpdated: Date,
+  },
 });
-
-let User;
 
 module.exports = class MoviesDB {
   constructor() {
