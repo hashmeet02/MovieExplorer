@@ -13,7 +13,7 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const dotenv = require("dotenv").config();
-const MoviesDB = require("./modules/moviesDB.js");
+const MoviesDB = require("./moviesDB.js");
 const db = new MoviesDB();
 
 const HTTP_PORT = process.env.PORT || 8080;
