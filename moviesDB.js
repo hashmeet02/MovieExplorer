@@ -18,61 +18,169 @@ let userSchema = new Schema({
 
 let User;
 
-module.exports = class MoviesDB {
-  constructor() {
-    // We don't have a `Movie` object until initialize() is complete
-    this.Movie = null;
-  }
+module.exports.connect = function () {
+  return new Promise(function (resolve, reject) {
+      let db = mongoose.createConnection(mongoDBConnectionString);
 
-  // Pass the connection string to `initialize()`
-  initialize(connectionString) {
-    return new Promise((resolve, reject) => {
-      const db = mongoose.createConnection(connectionString, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
+      db.on('error', err => {
+          reject(err);
       });
 
-      db.once("error", (err) => {
-        reject(err);
+      db.once('open', () => {
+          User = db.model("users", userSchema);
+          resolve();
       });
-      db.once("open", () => {
-        this.Movie = db.model("movies", movieSchema);
-        resolve();
-      });
-    });
-  }
-
-  async addNewMovie(data) {
-    const newMovie = new this.Movie(data);
-    await newMovie.save();
-    return newMovie;
-  }
-
-  getAllMovies(page, perPage, title) {
-    let findBy = title ? { title } : {};
-
-    if (+page && +perPage) {
-      return this.Movie.find(findBy)
-        .sort({ year: +1 })
-        .skip((page - 1) * +perPage)
-        .limit(+perPage)
-        .exec();
-    }
-
-    return Promise.reject(
-      new Error("page and perPage query parameters must be valid numbers")
-    );
-  }
-
-  getMovieById(id) {
-    return this.Movie.findOne({ _id: id }).exec();
-  }
-
-  updateMovieById(data, id) {
-    return this.Movie.updateOne({ _id: id }, { $set: data }).exec();
-  }
-
-  deleteMovieById(id) {
-    return this.Movie.deleteOne({ _id: id }).exec();
-  }
+  });
 };
+
+module.exports.registerUser = function (userData) {
+  return new Promise(function (resolve, reject) {
+
+      if (userData.password != userData.password2) {
+          reject("Passwords do not match");
+      } else {
+
+          bcrypt.hash(userData.password, 10).then(hash => {
+
+              userData.password = hash;
+
+              let newUser = new User(userData);
+
+              newUser.save(err => {
+                  if (err) {
+                      if (err.code == 11000) {
+                          reject("User Name already taken");
+                      } else {
+                          reject("There was an error creating the user: " + err);
+                      }
+
+                  } else {
+                      resolve("User " + userData.userName + " successfully registered");
+                  }
+              });
+          })
+              .catch(err => reject(err));
+      }
+  });
+};
+
+module.exports.checkUser = function (userData) {
+  return new Promise(function (resolve, reject) {
+
+      User.findOne({ userName: userData.userName })
+          .exec()
+          .then(user => {
+              bcrypt.compare(userData.password, user.password).then(res => {
+                  if (res === true) {
+                      resolve(user);
+                  } else {
+                      reject("Incorrect password for user " + userData.userName);
+                  }
+              });
+          }).catch(err => {
+              reject("Unable to find user " + userData.userName);
+          });
+  });
+};
+
+module.exports.getFavourites = function (id) {
+  return new Promise(function (resolve, reject) {
+
+      User.findById(id)
+          .exec()
+          .then(user => {
+              resolve(user.favourites)
+          }).catch(err => {
+              reject(`Unable to get favourites for user with id: ${id}`);
+          });
+  });
+}
+
+module.exports.addFavourite = function (id, favId) {
+
+  return new Promise(function (resolve, reject) {
+
+      User.findById(id).exec().then(user => {
+          if (user.favourites.length < 50) {
+              User.findByIdAndUpdate(id,
+                  { $addToSet: { favourites: favId } },
+                  { new: true }
+              ).exec()
+                  .then(user => { resolve(user.favourites); })
+                  .catch(err => { reject(`Unable to update favourites for user with id: ${id}`); })
+          } else {
+              reject(`Unable to update favourites for user with id: ${id}`);
+          }
+
+      })
+
+  });
+
+
+}
+
+module.exports.removeFavourite = function (id, favId) {
+  return new Promise(function (resolve, reject) {
+      User.findByIdAndUpdate(id,
+          { $pull: { favourites: favId } },
+          { new: true }
+      ).exec()
+          .then(user => {
+              resolve(user.favourites);
+          })
+          .catch(err => {
+              reject(`Unable to update favourites for user with id: ${id}`);
+          })
+  });
+}
+
+module.exports.getHistory = function (id) {
+  return new Promise(function (resolve, reject) {
+
+      User.findById(id)
+          .exec()
+          .then(user => {
+              resolve(user.history)
+          }).catch(err => {
+              reject(`Unable to get history for user with id: ${id}`);
+          });
+  });
+}
+
+module.exports.addHistory = function (id, historyId) {
+
+  return new Promise(function (resolve, reject) {
+
+      User.findById(id).exec().then(user => {
+          if (user.favourites.length < 50) {
+              User.findByIdAndUpdate(id,
+                  { $addToSet: { history: historyId } },
+                  { new: true }
+              ).exec()
+                  .then(user => { resolve(user.history); })
+                  .catch(err => { reject(`Unable to update history for user with id: ${id}`); })
+          } else {
+              reject(`Unable to update history for user with id: ${id}`);
+          }
+
+      })
+
+  });
+
+
+}
+
+module.exports.removeHistory = function (id, historyId) {
+  return new Promise(function (resolve, reject) {
+      User.findByIdAndUpdate(id,
+          { $pull: { history: historyId } },
+          { new: true }
+      ).exec()
+          .then(user => {
+              resolve(user.history);
+          })
+          .catch(err => {
+              reject(`Unable to update history for user with id: ${id}`);
+          })
+  });
+}
