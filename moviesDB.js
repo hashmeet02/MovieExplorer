@@ -1,47 +1,22 @@
 const mongoose = require("mongoose");
 const bcrypt = require('bcryptjs');
 
-let mongoDBConnectionString = process.env.MONGO_URL;
+var mongoDBConnectionString = process.env.MONGO_URL;
 
 const Schema = mongoose.Schema;
 
-const movieSchema = new Schema({
-  plot: String,
-  genres: [String],
-  runtime: Number,
-  cast: [String],
-  num_mflix_comments: Number,
-  poster: String,
-  title: String,
-  fullplot: String,
-  languages: [String],
-  released: Date,
-  directors: [String],
-  rated: String,
-  awards: {
-    wins: Number,
-    nominations: Number,
-    text: String,
+
+let userSchema = new Schema({
+  userName: {
+      type: String,
+      unique: true
   },
-  lastupdated: Date,
-  year: Number,
-  imdb: {
-    rating: Number,
-    votes: Number,
-    id: Number,
-  },
-  countries: [String],
-  type: String,
-  tomatoes: {
-    viewer: {
-      rating: Number,
-      numReviews: Number,
-      meter: Number,
-    },
-    dvd: Date,
-    lastUpdated: Date,
-  },
+  password: String,
+  favourites: [String],
+  history: [String]
 });
+
+let User;
 
 module.exports = class MoviesDB {
   constructor() {
