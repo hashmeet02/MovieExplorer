@@ -22,7 +22,7 @@ app.use(cors());
 app.use(express.json());
 
 app.get("/", function (req, res) {
-  res.json({ message: "API Listening!" });
+  res.json({ message: "API Listening!!" });
 });
 
 app.post("/api/movies", function (req, res) {
@@ -81,7 +81,6 @@ app.delete("/api/movies/:id", function (req, res) {
 app.use((req, res) => {
     res.status(404).send("Resource not found");
   });
-
 db.initialize(process.env.MONGODB_CONN_STRING).then(()=>{
     app.listen(HTTP_PORT, ()=>{
         console.log(`server listening on: ${HTTP_PORT}`);
